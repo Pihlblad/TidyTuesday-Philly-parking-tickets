@@ -49,17 +49,6 @@ f2 <- tickets %>%
 map <- get_stamenmap(bbox = c(left = -75.25, bottom = 39.90, right = -75.1, top=40),  getmaptype = "terrain", zoom=15)
 ggmap(map)+
   geom_point(data=f2, aes(lon,lat, color=month))
-
-ggplot(aes(reorder(violation_desc, count), count, fill=violation_desc))+
-  geom_bar(stat="identity")+
-  theme_bw()+
-  xlab("Violation Description")+
-  ylab("No of fines issued in 2017")+
-  theme_bw()+ 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
-  scale_fill_gradientn(colours=pal)
-f2
-
  
 ggplot(tcts, aes(issuing_agency, fine)) +
   geom_point()
