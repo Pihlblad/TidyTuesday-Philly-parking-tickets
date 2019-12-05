@@ -4,6 +4,8 @@ library(maps)
 library(OpenStreetMap)
 library(ggrepel)
 library(lubridate)
+library(wesanderson)
+library(gghighlight)
 
 tcts <- tickets %>% 
   mutate_if( is.character, as.factor) %>% 
@@ -25,29 +27,48 @@ df_violation <- tickets %>%
   ) %>% 
 group_by(violation_desc) %>% 
   summarize(sum=sum(fine, na.ignore=TRUE), count=n(), mean=mean(fine, na.ignore=TRUE)) %>% 
-  ungroup
-
-arrange(desc(sum)) %>% 
-  top_frac(.1, sum)
-
-Highes_issued <- tickets %>% 
-  mutate_if( is.character, as.factor) %>% 
-  mutate(
-    issuing_agency= fct_explicit_na(issuing_agency)
-  ) %>% 
-  group_by(violation_desc) %>% 
-  summarize(sum=sum(fine, na.ignore=TRUE), count=n(), mean=mean(fine, na.ignore=TRUE)) %>% 
   ungroup %>% 
-  arrange(desc(count)) %>% 
-  top_frac(.1, count)
-
+  mutate(
+    mean = as.integer(mean)
+  )
 
 f1 <- df_violation %>% 
   arrange(desc(sum)) %>% 
   top_frac(.1, sum) %>% 
-ggplot(aes(reorder(violation_desc, sum), sum))+
-  geom_bar(stat = "identity")
+  mutate(
+    sum= sum/1000
+  ) %>% 
+ggplot(aes(reorder(violation_desc, sum), sum, fill=sum, label=paste("$", mean)))+
+  geom_bar(stat = "identity")+
+  theme_bw()+
+  xlab("Violation Description")+
+  ylab("Total City k$ income by traffic fines 2017")+
+  theme_bw()+ 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  scale_fill_gradientn(colours=wes_palette(10, name = "Zissou1", type = "continuous"))+
+  geom_text_repel(nudge_y = -5)
 f1
+
+f2 <- tickets %>%
+  #filter(violation_desc=="METER EXPIRED CC") %>% 
+  mutate(
+    month = month(issue_datetime, label = TRUE)
+  ) %>% 
+  mutate_if(is.character, as.factor) %>% 
+  print
+  
+ggplot(f2, aes(lon, lat))+
+  geom_point()
+
+ggplot(aes(reorder(violation_desc, count), count, fill=violation_desc))+
+  geom_bar(stat="identity")+
+  theme_bw()+
+  xlab("Violation Description")+
+  ylab("No of fines issued in 2017")+
+  theme_bw()+ 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  scale_fill_gradientn(colours=pal)
+f2
 
  
 ggplot(tcts, aes(issuing_agency, fine)) +
